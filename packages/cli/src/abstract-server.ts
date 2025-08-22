@@ -113,6 +113,20 @@ export abstract class AbstractServer {
 
 		// Read incoming data into `rawBody`
 		this.app.use(rawBodyReader);
+
+		// hack enable security CSP
+		this.app.use((req, res, next) => {
+			res.setHeader(
+				'Content-Security-Policy',
+				"frame-ancestors 'self' https://app.acc.sparkwise.io;",
+			);
+			next();
+		});
+		this.app.use((req, res, next) => {
+			res.removeHeader('X-Frame-Options');
+			res.removeHeader('x-frame-options');
+			next();
+		});
 	}
 
 	private setupDevMiddlewares() {
