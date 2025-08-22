@@ -18,7 +18,6 @@ import * as utils from '@test-integration/utils';
 import { DataStoreColumnRepository } from '../data-store-column.repository';
 import { DataStoreRowsRepository } from '../data-store-rows.repository';
 import { DataStoreRepository } from '../data-store.repository';
-import { toTableName } from '../utils/sql-utils';
 
 let owner: User;
 let member: User;
@@ -781,9 +780,9 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId', () => {
 		});
 		expect(dataStoreColumnInDb).toBeNull();
 
-		await expect(
-			dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {}),
-		).rejects.toThrow(QueryFailedError);
+		await expect(dataStoreRowsRepository.getManyAndCount(dataStore.id, {})).rejects.toThrow(
+			QueryFailedError,
+		);
 	});
 });
 
@@ -1830,17 +1829,18 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${project.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
 
-		const readResponse = await authMemberAgent
-			.get(`/projects/${project.id}/data-stores/${dataStore.id}/rows`)
-			.expect(200);
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
-		expect(readResponse.body.data.count).toBe(1);
-		expect(readResponse.body.data.data[0]).toMatchObject(payload.data[0]);
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
+		expect(rowsInDb.count).toBe(1);
+		expect(rowsInDb.data[0]).toMatchObject(payload.data[0]);
 	});
 
 	test('should insert rows if user has project:admin role in team project', async () => {
@@ -1869,12 +1869,16 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authAdminAgent
+		const response = await authAdminAgent
 			.post(`/projects/${project.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		expect(response.body).toEqual({
+			data: [1],
+		});
+
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject(payload.data[0]);
 	});
@@ -1902,12 +1906,16 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		expect(response.body).toEqual({
+			data: [1],
+		});
+
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject(payload.data[0]);
 	});
@@ -1941,7 +1949,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			.expect(400);
 
 		expect(response.body.message).toContain('unknown column');
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(0);
 	});
 
@@ -1968,10 +1976,14 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
+
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
 		const readResponse = await authMemberAgent
 			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
@@ -2012,10 +2024,14 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
+
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
 		const readResponse = await authMemberAgent
 			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
@@ -2048,10 +2064,14 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
+
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
 		const readResponse = await authMemberAgent
 			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
@@ -2099,10 +2119,14 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
+
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
 		const readResponse = await authMemberAgent
 			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
@@ -2145,10 +2169,14 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 			],
 		};
 
-		await authMemberAgent
+		const response = await authMemberAgent
 			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
 			.send(payload)
 			.expect(200);
+
+		expect(response.body).toEqual({
+			data: [1],
+		});
 
 		const readResponse = await authMemberAgent
 			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
@@ -2156,6 +2184,63 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/insert', () => {
 
 		expect(readResponse.body.data.count).toBe(1);
 		expect(readResponse.body.data.data[0]).toMatchObject(payload.data[0]);
+	});
+
+	test('should insert multiple rows', async () => {
+		const dataStore = await createDataStore(memberProject, {
+			columns: [
+				{
+					name: 'a',
+					type: 'string',
+				},
+				{
+					name: 'b',
+					type: 'number',
+				},
+			],
+		});
+
+		const payload = {
+			data: [
+				{
+					a: 'first',
+					b: 1,
+				},
+				{
+					a: 'second',
+					b: 2,
+				},
+				{
+					a: 'third',
+					b: 3,
+				},
+			],
+		};
+
+		const first = await authMemberAgent
+			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
+			.send(payload)
+			.expect(200);
+
+		expect(first.body).toEqual({
+			data: [1, 2, 3],
+		});
+
+		const second = await authMemberAgent
+			.post(`/projects/${memberProject.id}/data-stores/${dataStore.id}/insert`)
+			.send(payload)
+			.expect(200);
+
+		expect(second.body).toEqual({
+			data: [4, 5, 6],
+		});
+
+		const readResponse = await authMemberAgent
+			.get(`/projects/${memberProject.id}/data-stores/${dataStore.id}/rows`)
+			.expect(200);
+
+		expect(readResponse.body.data.count).toBe(6);
+		expect(readResponse.body.data.data).toMatchObject([...payload.data, ...payload.data]);
 	});
 });
 
@@ -2201,7 +2286,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '1' })
 			.expect(403);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 	});
 
@@ -2232,7 +2317,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '1' })
 			.expect(403);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 	});
 
@@ -2272,7 +2357,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '1,3' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject({
 			first: 'test value 2',
@@ -2312,7 +2397,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '2' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject({
 			first: 'test value 1',
@@ -2351,7 +2436,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '1,2' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(0);
 	});
 
@@ -2388,7 +2473,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '2' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(2);
 		expect(rowsInDb.data.map((r) => r.first).sort()).toEqual(['test value 1', 'test value 3']);
 	});
@@ -2415,7 +2500,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 
 		expect(response.body.data).toBe(true);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 	});
 
@@ -2439,7 +2524,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '999,1000' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 	});
 
@@ -2466,7 +2551,7 @@ describe('DELETE /projects/:projectId/data-stores/:dataStoreId/rows', () => {
 			.query({ ids: '1,999,2,1000' })
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(0);
 	});
 });
@@ -2601,7 +2686,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/upsert', () => {
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject(payload.rows[0]);
 	});
@@ -2638,7 +2723,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/upsert', () => {
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject(payload.rows[0]);
 	});
@@ -2672,7 +2757,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/upsert', () => {
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(1);
 		expect(rowsInDb.data[0]).toMatchObject(payload.rows[0]);
 	});
@@ -2707,7 +2792,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/upsert', () => {
 			.expect(400);
 
 		expect(response.body.message).toContain('unknown column');
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {});
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {});
 		expect(rowsInDb.count).toBe(0);
 	});
 
@@ -2754,7 +2839,7 @@ describe('POST /projects/:projectId/data-stores/:dataStoreId/upsert', () => {
 			.send(payload)
 			.expect(200);
 
-		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(toTableName(dataStore.id), {
+		const rowsInDb = await dataStoreRowsRepository.getManyAndCount(dataStore.id, {
 			sortBy: ['id', 'ASC'],
 		});
 		expect(rowsInDb.count).toBe(3);
